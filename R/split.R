@@ -78,15 +78,21 @@ setMethod("split", "subcorpus", function(
     corpus = x@corpus, s_attributes_fixed = x@s_attributes, encoding = x@encoding
   )
   
-  if (x@xml == "nested") stop("splitting not yet implemented for nested XML")
-  
-  strucs <- cl_cpos2struc(corpus = x@corpus, s_attribute = s_attribute, cpos = x@cpos[,1], registry = registry())
-  strucs_values <- cl_struc2str(corpus = x@corpus, s_attribute = s_attribute, struc = strucs, registry = registry())
-  strucs_values <- as.nativeEnc(strucs_values, from = x@encoding)
-  
-  cpos_list <- split(x@cpos, strucs_values)
-  struc_list <- split(strucs, strucs_values)
-  
+  if (x@xml == "nested"){
+    strucs <- unique(cl_cpos2struc(corpus = x@corpus, s_attribute = s_attribute, cpos = cpos(x@cpos), registry = registry()))
+    strucs_values <- cl_struc2str(corpus = x@corpus, s_attribute = s_attribute, struc = strucs, registry = registry())
+    strucs_values <- as.nativeEnc(strucs_values, from = x@encoding)
+    struc_list <- split(strucs, strucs_values)
+    m <- get_region_matrix(corpus = x@corpus, s_attribute = s_attribute, strucs = strucs, registry = registry())
+    cpos_list <- split(m, strucs_values)
+  } else {
+    strucs <- cl_cpos2struc(corpus = x@corpus, s_attribute = s_attribute, cpos = x@cpos[,1], registry = registry())
+    strucs_values <- cl_struc2str(corpus = x@corpus, s_attribute = s_attribute, struc = strucs, registry = registry())
+    strucs_values <- as.nativeEnc(strucs_values, from = x@encoding)
+    cpos_list <- split(x@cpos, strucs_values)
+    struc_list <- split(strucs, strucs_values)
+  }
+
   if (!is.null(values)) for (i in rev(which(!names(cpos_list) %in% values))) cpos_list[[i]] <- NULL
   
   y@objects <- lapply(
@@ -102,7 +108,7 @@ setMethod("split", "subcorpus", function(
         strucs = struc_list[[i]],
         s_attribute_strucs = s_attribute,
         s_attributes = c(x@s_attributes, setNames(list(names(cpos_list)[[i]]), s_attribute)),
-        xml = "flat",
+        xml = x@xml,
         size = sum((m[,2] + 1L) - m[,1])
       )
       if (grepl("subcorpus", obj_type)){

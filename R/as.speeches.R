@@ -26,6 +26,7 @@ NULL
 #'   \code{mc} is passed into \code{mclapply} as argument \code{mc.cores}.
 #' @param verbose A \code{logical} value, defaults to \code{TRUE}.
 #' @param progress A \code{logical} value, whether to show progress bar.
+#' @param xml Whether XML is "flat" or "nested".
 #' @param ... Further arguments.
 #' @return A \code{partition_bundle}, the names of the objects in the bundle are
 #'   the speaker name, the date of the speech and an index for the number of the
@@ -53,7 +54,7 @@ setMethod("as.speeches", "partition", function(
   .Object,
   s_attribute_date = grep("date", s_attributes(.Object), value = TRUE),
   s_attribute_name = grep("name", s_attributes(.Object), value = TRUE),
-  gap = 500, mc = FALSE, verbose = TRUE, progress = TRUE
+  gap = 500, xml = "flat", mc = FALSE, verbose = TRUE, progress = TRUE
 ){
   
   stopifnot(
@@ -64,7 +65,7 @@ setMethod("as.speeches", "partition", function(
   )
   # as a first step, create partitions by date
   .message("generating partitions by date", verbose = verbose)
-  if (length(s_attributes(.Object, s_attribute_date)) > 1){
+  if (length(s_attributes(.Object, s_attribute_date)) > 1L){
     partition_bundle_dates <- partition_bundle(.Object, s_attribute = s_attribute_date)
   } else {
     partition_bundle_dates <- list(.Object)
@@ -75,7 +76,7 @@ setMethod("as.speeches", "partition", function(
     nested <- lapply(
       s_attributes(partition_date, s_attribute_name),
       function(speaker_name){
-        partition_bundle_names <- partition(partition_date, def = setNames(list(speaker_name), s_attribute_name), verbose = FALSE)
+        partition_bundle_names <- partition(partition_date, def = setNames(list(speaker_name), s_attribute_name), verbose = FALSE, xml = xml)
         split(partition_bundle_names, gap = gap, verbose = FALSE)
       }
     )
@@ -87,11 +88,17 @@ setMethod("as.speeches", "partition", function(
     mc = mc, progress = progress
   )
   speaker_list <- do.call(c, unlist(speaker_list_nested, recursive = FALSE))
+  
   .message("generating names", verbose = verbose)
   partition_names <- sapply(
     speaker_list,
     function(x){
-      paste(x@s_attributes[[s_attribute_name]], s_attributes(x, s_attribute_date), x@name, sep = "_")
+      paste(
+        x@s_attributes[[s_attribute_name]],
+        s_attributes(x, s_attribute_date),
+        x@name,
+        sep = "_"
+      )
     }
   )
   for (i in 1L:length(speaker_list)) name(speaker_list[[i]]) <- partition_names[i]

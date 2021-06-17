@@ -1,4 +1,4 @@
-polmineR 0.8.5.9001 - 0.8.5.9013
+polmineR 0.8.5.9001 - 0.8.5.9014
 ================================
 
 ## New Features
@@ -18,6 +18,9 @@ by using the reference semantic of the data.table package. If many columns are a
 - The `get_token_stream()`-method for `regions` and `matrix` objects will now accept a logical argument `split`. If `TRUE`, a list of character vectors is returned. The envisaged use case is a fast decoding of sentences (#176).
 - A `encoding()` method has been defined if argument `object` is missing. Calling `encoding()` will return the session character set. If it cannot be determined using `localeToCharset()`, a UTF-8 session charset will be assumed. Internally, `encoding()` replaces a direct call of `localeToCharset()` to avoid errors that have occurred on GitHub Actions with Ubuntu 20.04 (#188).
 - If the session character set cannot be guessed by `localeToCharset()` (`NA` return value), a startup message will issue a warning that 'UTF-8' is assumed (#188).
+- The LazyData statement in the DECRIPTION file has been removed. There are not R objects in the 'data' folder of the package, so this statement is superfluous, and starting with R version 4.1.0 this throws a message that can be omitted.
+- The `as.speeches()`-method for `partition` objects now accepts the argument `xml` that is passed into the internal call of the `partition()`-method. This prepares the ability of the method to work well with corpora with nested XML.
+- The `split()` method for `partition` objects is now able to process corpora with nested XML. This implies that the `partition_bundle()`-method is now able process nested corpora.
 
 ## Minor Improvements
 
